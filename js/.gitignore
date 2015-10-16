@@ -1,2 +1,6 @@
 *.classpath
 *.project
+/scala/
+/bin/
+*.cache-main
+*.cache-tests
