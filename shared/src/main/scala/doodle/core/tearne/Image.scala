@@ -7,7 +7,15 @@ import doodle.core.Line
 import doodle.core.Angle
 import doodle.core.Normalized
 
+case class BoundingBox(l: Double, r:Double, t: Double, b:Double)
+object BoundingBox{
+  def apply(img: Image): BoundingBox = ???
+  def update(): BoundingBox = ???
+}
+
 sealed trait Image {
+  lazy val boundingBox: BoundingBox = BoundingBox(this)
+  
   def above(that: Image): Image =
     Above(this, that)
 
@@ -20,9 +28,13 @@ sealed trait Image {
   val half = Normalized(0.5)
     
   def draw(canvas: Canvas): Unit = this match {
-    case Empty => 
-    case Circle(r, x, y) =>
-      canvas.circle(x, y, r)
+    ???  
+  }
+  
+  def draw(canvas: Canvas, originX: Double, originY: Double): Unit = this match {
+  case Empty => 
+    case Circle(r) =>
+      canvas.circle(0, 0, r)
       canvas.setStroke(Stroke(3.0, Color.black, Line.Cap.Round, Line.Join.Round))
       canvas.stroke()
       canvas.setFill(Color.hsla(Angle.turns(math.random), half, half, half))
@@ -52,7 +64,13 @@ sealed trait Image {
       canvas.stroke()
     case Rectangle(w, h) => ???
     case Above(a, b)     => ???
-    case Beside(l, r)    => ???
+    case Beside(l, r)    => 
+      val leftBB = l.boundingBox
+      val rightBB = r.boundingBox
+      
+      
+      l.draw(canvas, lX, lY)
+      r.draw(canvas, rX, rY)
     case On(f, b)        => 
       b.draw(canvas)
       f.draw(canvas)
@@ -71,7 +89,7 @@ object Image{
 
 final case object Empty extends Image
 final case object Dog extends Image
-final case class Circle(radius: Double, x: Int, y: Int) extends Image
+final case class Circle(radius: Double) extends Image
 final case class Rectangle(width: Double, height: Double) extends Image
 final case class Above(above: Image, below: Image) extends Image
 final case class Beside(left: Image, right: Image) extends Image
