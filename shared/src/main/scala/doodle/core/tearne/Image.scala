@@ -4,6 +4,8 @@ import doodle.backend.Canvas
 import doodle.core.Stroke
 import doodle.core.Color
 import doodle.core.Line
+import doodle.core.Angle
+import doodle.core.Normalized
 
 sealed trait Image {
   def above(that: Image): Image =
@@ -15,11 +17,16 @@ sealed trait Image {
   def on(that: Image): Image =
     On(this, that)
 
+  val half = Normalized(0.5)
+    
   def draw(canvas: Canvas): Unit = this match {
-    case Circle(r) =>
-      canvas.circle(0, 0, r)
+    case Circle(r, x, y) =>
+      canvas.circle(x, y, r)
       canvas.setStroke(Stroke(3.0, Color.black, Line.Cap.Round, Line.Join.Round))
       canvas.stroke()
+      canvas.setFill(
+          Color.hsla(Angle.turns(math.random), half, half, half))
+      canvas.fill()
     case Dog =>
       canvas.beginPath()
       canvas.moveTo(180, 280)
@@ -57,7 +64,7 @@ sealed trait Image {
 }
 
 final case object Dog extends Image
-final case class Circle(radius: Double) extends Image
+final case class Circle(radius: Double, x: Int, y: Int) extends Image
 final case class Rectangle(width: Double, height: Double) extends Image
 final case class Above(above: Image, below: Image) extends Image
 final case class Beside(left: Image, right: Image) extends Image
