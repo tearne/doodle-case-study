@@ -20,12 +20,12 @@ sealed trait Image {
   val half = Normalized(0.5)
     
   def draw(canvas: Canvas): Unit = this match {
+    case Empty => 
     case Circle(r, x, y) =>
       canvas.circle(x, y, r)
       canvas.setStroke(Stroke(3.0, Color.black, Line.Cap.Round, Line.Join.Round))
       canvas.stroke()
-      canvas.setFill(
-          Color.hsla(Angle.turns(math.random), half, half, half))
+      canvas.setFill(Color.hsla(Angle.turns(math.random), half, half, half))
       canvas.fill()
     case Dog =>
       canvas.beginPath()
@@ -53,7 +53,9 @@ sealed trait Image {
     case Rectangle(w, h) => ???
     case Above(a, b)     => ???
     case Beside(l, r)    => ???
-    case On(f, b)        => ???
+    case On(f, b)        => 
+      b.draw(canvas)
+      f.draw(canvas)
   }
 
   // A helper method you will probably want
@@ -63,6 +65,11 @@ sealed trait Image {
   // Need bounding box
 }
 
+object Image{
+  val empty: Image = Empty
+}
+
+final case object Empty extends Image
 final case object Dog extends Image
 final case class Circle(radius: Double, x: Int, y: Int) extends Image
 final case class Rectangle(width: Double, height: Double) extends Image
