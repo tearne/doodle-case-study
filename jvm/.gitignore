@@ -3,3 +3,4 @@
 /scala/
 /bin/
 *.cache-main
+*.cache
