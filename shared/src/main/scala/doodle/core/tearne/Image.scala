@@ -6,19 +6,28 @@ import doodle.core.Color
 import doodle.core.Line
 import doodle.core.Angle
 import doodle.core.Normalized
+import doodle.core.Vec
 import scala.language.implicitConversions
 import math.{min, max}
 
-case class BoundingBox(west: Double, east: Double, south: Double, north: Double){
-  lazy val width = east - west
-  lazy val height = north - south
-  lazy val midX = width / 2 + west
-  lazy val midY = height / 2 + south
+case class BoundingBox(bottomLeft: Vec, topRight: Vec){
+  lazy val width = topRight.x - bottomLeft.x
+  lazy val height = topRight.y - bottomLeft.y
+  lazy val midPoint = bottomLeft + Vec(width / 2, height / 2)
+  
+  def west = bottomLeft.x
+  def east = topRight.x
+  def south = bottomLeft.y
+  def north = topRight.y
 }
 object BoundingBox {
-  implicit def bb(img: Image) = apply(img)//img.boundingBox
+  def apply(west: Double, east: Double, south: Double, north: Double): BoundingBox = 
+    BoundingBox(Vec(west, south), Vec(east, north))
+    
+  implicit def getBB(img: Image) = apply(img)
   
   def apply(img: Image): BoundingBox = img match {
+    case Empty => BoundingBox(0,0,0,0)
     case Circle(r) => BoundingBox(-r, r, -r, r)
     case Rectangle(w,h) => BoundingBox(-w / 2, w / 2, -h / 2, h / 2)
     case On(top, bottom) => BoundingBox(
@@ -49,66 +58,43 @@ object BoundingBox {
 }
 
 sealed trait Image {
-  //lazy val boundingBox: BoundingBox = BoundingBox(this)
+  def above(that: Image): Image = Above(this, that)
+  def beside(that: Image): Image = Beside(this, that)
+  def on(that: Image): Image = On(this, that)
+
+  private val half = Normalized(0.5)
+  private def randomColour = Color.hsla(Angle.turns(math.random), half, half, half)
   
-  def above(that: Image): Image =
-    Above(this, that)
-
-  def beside(that: Image): Image =
-    Beside(this, that)
-
-  def on(that: Image): Image =
-    On(this, that)
-
-  val half = Normalized(0.5)
-
   def draw(canvas: Canvas) { draw(canvas, 0, 0) }
 
   def draw(canvas: Canvas, originX: Double, originY: Double) {
+    import BoundingBox._
+    
     this match {
       case Empty =>
       case Circle(r) =>
         canvas.circle(originX, originY, r)
         canvas.setStroke(Stroke(3.0, Color.black, Line.Cap.Round, Line.Join.Round))
         canvas.stroke()
-        canvas.setFill(Color.hsla(Angle.turns(math.random), half, half, half))
+        canvas.setFill(randomColour)
         canvas.fill()
       case Rectangle(w, h) => 
         canvas.rectangle(originX - w / 2 , originY + h / 2, w, h)
+        canvas.setStroke(Stroke(3.0, Color.black, Line.Cap.Round, Line.Join.Round))
         canvas.stroke()
-        canvas.setFill(Color.hsla(Angle.turns(math.random), half, half, half))
+        canvas.setFill(randomColour)
         canvas.fill()
       case Above(above, below)     => 
-        val thisBB = BoundingBox(this)
-        val aboveBB = BoundingBox(above)
-        val belowBB = BoundingBox(below)
+        val xOrigin = originX + this.midPoint.x
+        val aboveYOrigin = originY + this.north - above.height / 2
+        val belowYOrigin = originY + this.south + below.height / 2
         
-        println("---------------")
-        println("This "+this)
-        println(" - with bounding Box "+thisBB)
-        println("Above "+above)
-        println(" - with bounding Box "+aboveBB)
-        println("Below "+below)
-        println(" - with bounding Box "+belowBB)
-        
-        
-        val xOrigin = originX + thisBB.midX
-        val aboveYOrigin = originY + thisBB.north - aboveBB.height / 2
-        val belowYOrigin = originY + thisBB.south + belowBB.height / 2
-        
-        
-        println(s"Above Y origin$aboveYOrigin, below Y origin $belowYOrigin")        
-        println("---------------")
         above.draw(canvas, xOrigin, aboveYOrigin)
         below.draw(canvas, xOrigin, belowYOrigin)
       case Beside(left, right) =>
-        val thisBB = BoundingBox(this)
-        val leftBB = BoundingBox(left)
-        val rightBB = BoundingBox(right)
-        
-        val leftXOrigin = originX + leftBB.width / 2 + thisBB.west
-        val rightXOrigin = originX + thisBB.east - rightBB.width / 2
-        val yOrigin = originY + thisBB.midY
+        val leftXOrigin = originX + left.width / 2 + this.west
+        val rightXOrigin = originX + this.east - right.width / 2
+        val yOrigin = originY + this.midPoint.y
         left.draw(canvas, leftXOrigin, yOrigin)
         right.draw(canvas, rightXOrigin, yOrigin)
       case On(f, b) =>
@@ -123,7 +109,6 @@ object Image {
 }
 
 final case object Empty extends Image
-final case object Dog extends Image
 final case class Circle(radius: Double) extends Image
 final case class Rectangle(width: Double, height: Double) extends Image
 final case class Above(above: Image, below: Image) extends Image
