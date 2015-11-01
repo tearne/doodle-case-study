@@ -4,4 +4,4 @@
 /bin/
 *.cache-main
 *.cache
-/scala/
+/scala
