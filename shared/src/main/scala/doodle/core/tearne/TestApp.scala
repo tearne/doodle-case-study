@@ -1,31 +1,41 @@
 package doodle.core.tearne
 
+
+import doodle.backend.Key 
+import doodle.core._
+import doodle.event._
 import doodle.jvm.Java2DCanvas
 
+
 object TestApp extends App {
+  
+  val canvas = Java2DCanvas.canvas
+  canvas.setSize(bb.width.toInt, bb.height.toInt
+      
+  val frameCallback = EventStream.source
+  canvas.setAnimationFrameCallback(callback)
+      
+  val redraw = Canvas.animationFrameEventStream(canvas) 
+  val keys = Canvas.keyDownEventStream(canvas)
 
-
-  def randomImg(depth: Int = 0): Image = {
-    def randomShape = {
-      def randomDim = math.random * 20 + 20
-      if (math.random < 0.5) Circle(randomDim)
-      else Rectangle(randomDim, randomDim)
+  val velocity = keys.foldp(Vec.zero)((key, prev) => { 
+    val velocity = key match {
+      case Key.Up => prev + Vec(0, 1) 
+      case Key.Right => prev + Vec(1, 0) 
+      case Key.Down => prev + Vec(0, -1) 
+      case Key.Left => prev + Vec(-1, 0) 
+      case _ => prev
     }
     
-    if (depth == 4) randomShape
-    else if (math.random < 0.5)
-      randomImg(depth + 1) above randomImg(depth + 1)
-    else
-      randomImg(depth + 1) beside randomImg(depth + 1)
-  }
-
-  def run {
-    val canvas = Java2DCanvas.canvas
-    val img = randomImg()
-    val bb = BoundingBox(img)
-    canvas.setSize(bb.width.toInt, bb.height.toInt)
-    img.draw(canvas)
-  }
-
-  run
+    Vec(velocity.x.min(5).max(-5), velocity.y.min(5).max(-5))
+  })
+  
+  val location = redraw.join(velocity).map{ case(ts, m) => m }. 
+    foldp(Vec.zero){ (velocity, prev) =>
+      val location = prev + velocity
+      Vec(location.x.min(300).max(-300), location.y.min(300).max(-300)) 
+    }
+  
+  val ball = Circle(20) fillColor (Color.red) lineColor (Color.green)
+  val frames = location.map(location => ball at location) Canvas.animate(Java2DCanvas.canvas, frames)
 }
