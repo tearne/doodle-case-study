@@ -12,7 +12,7 @@ sealed trait EventStream[A] {
   }
   
   def map[B](f: A => B): EventStream[B] = {
-    val node = Map(this, f)
+    val node = Map(f)
     subscribe(node)
     node
   }
@@ -31,7 +31,7 @@ sealed trait EventStream[A] {
   }
 }
 
-final case class Map[In, Out](source: EventStream[In], f: In => Out) 
+final case class Map[In, Out](f: In => Out) 
     extends Reciever[In] with EventStream[Out]{
   def rx(value: In) = send(f(value))
 }
