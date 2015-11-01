@@ -10,16 +10,11 @@ import doodle.core.tearne._
 
 object TestApp extends App {
   
-  val testStream = new EventStream[Int]{
-    def go = List(1,2,3,4).foreach { send }
-  }
+  val source = Source[Int]()
+  val timesTen = source.map( _ * 10 )
+  source.join(timesTen).map{case (l,r) => println(l+r)}
   
-  val left = testStream.map( _ * 10 )
-  val right = testStream.map( _ + 1 )
-  
-  left.join(right).map{case (l,r) => println(l+r)}
-  
-  testStream.go
+  List(1,2,3,4).foreach(source.send)
   
   /*
   val canvas = Java2DCanvas.canvas
