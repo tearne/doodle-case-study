@@ -3,12 +3,25 @@ package doodle.core.tearne
 
 import doodle.backend.Key 
 import doodle.core._
-import doodle.event._
 import doodle.jvm.Java2DCanvas
+
+import doodle.core.tearne._
 
 
 object TestApp extends App {
   
+  val testStream = new EventStream[Int]{
+    def go = List(1,2,3,4).foreach { send }
+  }
+  
+  val left = testStream.map( _ * 10 )
+  val right = testStream.map( _ + 1 )
+  
+  left.join(right).map{case (l,r) => println(l+r)}
+  
+  testStream.go
+  
+  /*
   val canvas = Java2DCanvas.canvas
   canvas.setSize(bb.width.toInt, bb.height.toInt
       
@@ -38,4 +51,6 @@ object TestApp extends App {
   
   val ball = Circle(20) fillColor (Color.red) lineColor (Color.green)
   val frames = location.map(location => ball at location) Canvas.animate(Java2DCanvas.canvas, frames)
+  * /
+  */
 }
