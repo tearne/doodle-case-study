@@ -30,7 +30,13 @@ sealed trait EventStream[A] {
   }
   
   def foldp[B](seed: B)(f: (A, B) => B): EventStream[B] = {
-    val node = FoldP(seed, f)
+    var acc = seed
+    // Got rid of FoldP class, but now have closure over var :-(
+    val node = Map((a:A) => {
+      acc = f(a,acc)
+      acc
+    })
+    
     subscribe(node)
     node
   }
@@ -71,11 +77,4 @@ final case class Join[L, R](left: EventStream[L], right: EventStream[R])
   }}
 }
 
-final case class FoldP[A,B](seed: B, f: (A, B) => B) extends EventStream[B] with Reciever[A]{
-  var acc = seed
-  def rx(value: A) = {
-    acc = f(value, acc)
-    send(acc)
-  }
-}
 final case class Source[A]() extends EventStream[A]
