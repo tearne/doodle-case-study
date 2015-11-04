@@ -1,35 +1,28 @@
 package doodle.core.tearne
 
-
-import doodle.backend.Key 
 import doodle.core._
 import doodle.jvm.Java2DCanvas
-
-import doodle.core.tearne._
+import doodle.backend.Key
 
 
 object TestApp extends App {
   
-  val source = Source[Int]()
-  val timesTen = source.map( _ * 10 )
-  source.join(timesTen).map{case (l,r) => println(l+r)}
-  
+  // Simple test 1
+//  val source = Source[Int]()
+//  val timesTen = source.map( _ * 10 )
+//  source.join(timesTen).map{case (l,r) => println(l+r)}
 //  List(1,2,3,4).foreach(source.send)
   
+  // Simple test 2
+//  val ones = Source[Int]()
+//  ones.foldp(0)(_ + _).map(println)
+//  List(1,1,1,1,1,1,1).foreach(ones.send)
   
-  val ones = Source[Int]()
-  ones.foldp(0)(_ + _).map(println)
   
-  List(1,1,1,1,1,1,1).foreach(ones.send)
-  
-  
-  /*
   val canvas = Java2DCanvas.canvas
-  canvas.setSize(bb.width.toInt, bb.height.toInt
+  canvas.setSize(640, 480)
       
-  val frameCallback = EventStream.source
-  canvas.setAnimationFrameCallback(callback)
-      
+  // From the pdf
   val redraw = Canvas.animationFrameEventStream(canvas) 
   val keys = Canvas.keyDownEventStream(canvas)
 
@@ -52,7 +45,6 @@ object TestApp extends App {
     }
   
   val ball = Circle(20) fillColor (Color.red) lineColor (Color.green)
-  val frames = location.map(location => ball at location) Canvas.animate(Java2DCanvas.canvas, frames)
-  * /
-  */
+  val frames = location.map(location => ball at location) 
+  Canvas.animate(canvas, frames)
 }

@@ -4,8 +4,8 @@ trait Reciever[A] {
   def rx(value: A)
 }
 object Reciever{
-  def apply[A](rxHandler: A => Unit) = new Reciever[A]{
-    def rx(value: A) = rxHandler(value)
+  def apply[A](handler: A => Unit) = new Reciever[A]{
+    def rx(value: A) = handler(value)
   }
 }
 
