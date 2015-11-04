@@ -14,7 +14,14 @@ object TestApp extends App {
   val timesTen = source.map( _ * 10 )
   source.join(timesTen).map{case (l,r) => println(l+r)}
   
-  List(1,2,3,4).foreach(source.send)
+//  List(1,2,3,4).foreach(source.send)
+  
+  
+  val ones = Source[Int]()
+  ones.foldp(0)(_ + _).map(println)
+  
+  List(1,1,1,1,1,1,1).foreach(ones.send)
+  
   
   /*
   val canvas = Java2DCanvas.canvas

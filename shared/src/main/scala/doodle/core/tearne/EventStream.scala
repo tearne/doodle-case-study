@@ -3,6 +3,11 @@ package doodle.core.tearne
 trait Reciever[A] {
   def rx(value: A)
 }
+object Reciever{
+  def apply[A](rxHandler: A => Unit) = new Reciever[A]{
+    def rx(value: A) = rxHandler(value)
+  }
+}
 
 sealed trait EventStream[A] {
   val downstream = collection.mutable.Set.empty[Reciever[A]]
@@ -24,7 +29,11 @@ sealed trait EventStream[A] {
     node
   }
   
-  //def scan[B](seed: B)(f: (A, B) => B): EventStream[B] = Scan(this, seed, f)
+  def foldp[B](seed: B)(f: (A, B) => B): EventStream[B] = {
+    val node = FoldP(seed, f)
+    subscribe(node)
+    node
+  }
 
   def send(value: A){
     downstream.foreach(_.rx(value))
@@ -39,21 +48,17 @@ final case class Map[In, Out](f: In => Out)
 final case class Join[L, R](left: EventStream[L], right: EventStream[R]) 
     extends EventStream[(L,R)] {
 	//Don't like var but can't see any other way
-	var lastLeft: Option[L] = None
-	var lastRight: Option[R] = None
+  var lastLeft: Option[L] = None
+  var lastRight: Option[R] = None
   
-	val leftReciever = new Reciever[L]{  
-    def rx(value: L) = {
-      lastLeft = Some(value)
-      go()
-    }
+  val leftReciever = Reciever[L]{ value =>  
+    lastLeft = Some(value)  //Bit worried about this
+    go()
   }
   
-  val rightReciever = new Reciever[R]{
-    def rx(value: R) = {
-      lastRight = Some(value)
-      go()
-    }
+  val rightReciever = Reciever[R]{value => 
+    lastRight = Some(value)
+    go()
   }
   
   def go() {for{
@@ -66,5 +71,11 @@ final case class Join[L, R](left: EventStream[L], right: EventStream[R])
   }}
 }
 
-//final case class Scan[A,B](source: EventStream[A], seed: B, f: (A, B) => B) extends EventStream[B]
+final case class FoldP[A,B](seed: B, f: (A, B) => B) extends EventStream[B] with Reciever[A]{
+  var acc = seed
+  def rx(value: A) = {
+    acc = f(value, acc)
+    send(acc)
+  }
+}
 final case class Source[A]() extends EventStream[A]
