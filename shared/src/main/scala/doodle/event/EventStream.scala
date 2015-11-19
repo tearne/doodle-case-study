@@ -1,6 +1,8 @@
 package doodle
 package event
 
+import doodle.tearne.typeclass.Functor
+
 sealed trait EventStream[A] {
   def map[B](f: A => B): EventStream[B]
 
@@ -13,6 +15,10 @@ object EventStream {
     val stream = new Source[A]()
     handler((evt: A) => stream.observe(evt))
     stream
+  }
+  
+  implicit object EventStreamFunctor extends Functor[EventStream]{
+    def map[A,B](from: EventStream[A])(f: A => B) = from.map(f)
   }
 }
 sealed trait Observer[A] {
